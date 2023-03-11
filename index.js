@@ -6,9 +6,10 @@ require("dotenv").config();
 app.use(cors());
 
 app.get("/initialize", function(req, res) {
+    console.log(req.query);
     const params = JSON.stringify({
-        email: "cust@email.com",
-        amount: "10000",
+        email: req.query.email,
+        amount: req.query.amount * 100,
     });
 
     const options = {

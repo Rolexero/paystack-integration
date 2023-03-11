@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import logo from "./logo.svg";
 import "./App.css";
 import tw, { styled } from "twin.macro";
@@ -8,6 +8,7 @@ import { InitializeTransactionModel } from "./types/model";
 import { useFormik } from "formik";
 import { InitializeTransactionSchema } from "./models/Schema";
 import axios from "axios";
+import { useLocation } from "react-router-dom";
 
 const initialValues: InitializeTransactionModel = {
   email: "",
@@ -15,13 +16,14 @@ const initialValues: InitializeTransactionModel = {
 };
 
 function App() {
-  useEffect(() => {
-    async function fetchMovie() {
-      const response = await axios.get("http://localhost:3004/initialize");
-      console.log(response.data);
-    }
-    fetchMovie();
-  }, []);
+  const [reference, setReference] = useState("");
+
+  const queryParams = new URLSearchParams(window.location.search);
+  const term = queryParams.get("reference");
+
+  if (term) {
+    console.log(term);
+  }
 
   const {
     errors,
@@ -36,28 +38,29 @@ function App() {
     validateOnChange: false,
     validateOnBlur: false,
     onSubmit: () => {
+      fetchMovie();
+
       console.log(values);
     },
   });
 
-  const config = {
-    reference: new Date().getTime().toString(),
-    email: "user@example.com",
-    amount: 20000, //Amount is in the country's lowest currency. E.g Kobo, so 20000 kobo = N200
-    publicKey: "pk_test_dsdfghuytfd2345678gvxxxxxxxxxx",
+  const options = {
+    method: "POST",
+    url: "http://localhost:3004/initialize",
+    params: { email: values.email, amount: values.amount },
   };
 
-  // you can call this function anything
-  const onSuccess = (reference: string) => {
-    // Implementation for whatever you want to do with reference and after success call.
-    console.log(reference);
-  };
-
-  // you can call this function anything
-  const onClose = () => {
-    // implementation for  whatever you want to do when the Paystack dialog closed.
-    console.log("closed");
-  };
+  async function fetchMovie() {
+    await axios
+      .get("http://localhost:3004/initialize", {
+        params: { email: values.email, amount: values.amount },
+      })
+      .then((response) => {
+        console.log(response?.data?.data?.authorization_url);
+        window.open(response?.data?.data?.authorization_url);
+      })
+      .catch((err) => console.log(err));
+  }
 
   return (
     <Container>
