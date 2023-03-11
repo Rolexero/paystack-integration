@@ -6,7 +6,6 @@ require("dotenv").config();
 app.use(cors());
 
 app.get("/initialize", function(req, res) {
-    console.log(req.query);
     const params = JSON.stringify({
         email: req.query.email,
         amount: req.query.amount * 100,
@@ -42,6 +41,37 @@ app.get("/initialize", function(req, res) {
 
     reqPaystack.write(params);
     reqPaystack.end();
+});
+
+app.get("/verify", function(req, res) {
+    const options = {
+        hostname: "api.paystack.co",
+        port: 443,
+        path: `/transaction/verify/${req.query.verification_id}`,
+        method: "GET",
+        headers: {
+            Authorization: `Bearer ${process.env.REACT_APP_PAYSTACK_KEY}`,
+        },
+    };
+
+    const reqVerify = https
+        .request(options, (resVerify) => {
+            let data = "";
+
+            resVerify.on("data", (chunk) => {
+                data += chunk;
+            });
+
+            resVerify.on("end", () => {
+                res.send(data);
+                console.log(JSON.parse(data));
+            });
+        })
+        .on("error", (error) => {
+            console.error(error);
+        });
+
+    reqVerify.end();
 });
 
 app.listen(3004, () => console.log("app running"));

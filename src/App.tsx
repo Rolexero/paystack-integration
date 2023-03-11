@@ -8,7 +8,7 @@ import { InitializeTransactionModel } from "./types/model";
 import { useFormik } from "formik";
 import { InitializeTransactionSchema } from "./models/Schema";
 import axios from "axios";
-import { useLocation } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const initialValues: InitializeTransactionModel = {
   email: "",
@@ -16,14 +16,16 @@ const initialValues: InitializeTransactionModel = {
 };
 
 function App() {
-  const [reference, setReference] = useState("");
+  const [loading, setLoading] = useState<boolean>(false);
 
   const queryParams = new URLSearchParams(window.location.search);
   const term = queryParams.get("reference");
 
-  if (term) {
-    console.log(term);
-  }
+  useEffect(() => {
+    if (term) {
+      verifyTransaction(term);
+    }
+  }, [term]);
 
   const {
     errors,
@@ -38,28 +40,38 @@ function App() {
     validateOnChange: false,
     validateOnBlur: false,
     onSubmit: () => {
-      fetchMovie();
-
-      console.log(values);
+      initializeTransaction();
     },
   });
 
-  const options = {
-    method: "POST",
-    url: "http://localhost:3004/initialize",
-    params: { email: values.email, amount: values.amount },
-  };
+  async function initializeTransaction() {
+    setLoading(true);
 
-  async function fetchMovie() {
     await axios
       .get("http://localhost:3004/initialize", {
         params: { email: values.email, amount: values.amount },
       })
       .then((response) => {
-        console.log(response?.data?.data?.authorization_url);
         window.open(response?.data?.data?.authorization_url);
+        resetForm();
       })
-      .catch((err) => console.log(err));
+      .catch((err) => toast.error(err));
+    setLoading(false);
+  }
+
+  async function verifyTransaction(verificationId: string) {
+    setLoading(true);
+    await axios
+      .get("http://localhost:3004/verify/", {
+        params: { verification_id: verificationId },
+      })
+      .then((response) => {
+        if (response?.data?.data?.status || response?.data?.message) {
+          toast.success("Transaction verification successful");
+        }
+      })
+      .catch((err) => toast.error(err));
+    setLoading(false);
   }
 
   return (
@@ -88,7 +100,8 @@ function App() {
           />
 
           <Button
-            value={"Pay Now"}
+            value={loading ? "Please Wait" : "Pay Now"}
+            disabled={loading}
             type="submit"
             className="disabled:cursor-not-allowed"
           />
