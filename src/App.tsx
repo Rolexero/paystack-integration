@@ -53,7 +53,7 @@ function App() {
     setLoading(true);
 
     await axios
-      .get("http://localhost:3004/initialize", {
+      .get("https://paystack-backend.vercel.app/initialize", {
         params: {
           email: values.email,
           amount: values.amount,
@@ -71,7 +71,7 @@ function App() {
   async function verifyTransaction(verificationId: string) {
     setLoading(true);
     await axios
-      .get("http://localhost:3004/verify/", {
+      .get("https://paystack-backend.vercel.app/verify", {
         params: { verification_id: verificationId },
       })
       .then((response) => {
@@ -86,7 +86,7 @@ function App() {
 
   async function listTransaction() {
     await axios
-      .get("http://localhost:3004/list_transaction")
+      .get("https://paystack-backend.vercel.app/list_transaction")
       .then((response) => {
         setTransactionData(response?.data?.data);
       })
